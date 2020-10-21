@@ -1,0 +1,138 @@
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+import pandas as pd
+from sklearn import svm
+import numpy as np, matplotlib.pyplot as plt
+from sklearn.neighbors.classification import KNeighborsClassifier
+from sklearn.manifold.t_sne import TSNE
+from sklearn.manifold import TSNE
+from sklearn.svm import SVC
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import make_scorer
+from utils import mnist_reader
+from sklearn.linear_model import LogisticRegression
+
+def kfold(X_train, y_train, X_test, y_test, reg_c_set, gamma_set,k = 5):
+    fold_X = []
+    fold_y = []
+    fold_indices = np.arange(len(y_train))
+    np.random.shuffle(fold_indices)
+    fold_sets = np.array_split(fold_indices, k)
+
+    for item in range(k):
+        set_x = []
+        set_y = []
+        ind = fold_sets[item]
+        for items in range(len(ind)):
+            set_x.append(X_train[ind[items]])
+            set_y.append(y_train[ind[items]])
+        fold_X.append(np.array(set_x))
+        fold_y.append(np.array(set_y))
+
+    fold_X = np.array(fold_X)
+    fold_y = np.array(fold_y)
+
+    train_errors = []
+    test_errors = []
+
+    for gamma in gamma_set:
+
+        best_reg_c = 0
+        min_test_error = 1
+        min_train_error = 1
+
+        for ite in reg_c_set:
+
+            model = svm.SVC(kernel='rbf', gamma=gamma, C=ite, max_iter=-1)
+            train_error = 0
+            test_error = 0
+            for items in range(k):
+
+                fold_X_test = fold_X[items]
+                fold_y_testset = fold_y[items]
+
+                fold_X_train_set = np.delete(fold_X, items, axis=0)
+                fold_y_train_set = np.delete(fold_y, items, axis=0)
+
+                fold_X_train = fold_X_train_set[0]
+                fold_y_train = fold_y_train_set[0]
+
+                size1 = len(fold_X_train_set)
+                size2 = len(fold_y_train_set)
+                arrX_trainset = range(1, size1)
+                arry_trainset = range(1, size2)
+
+                for item in arrX_trainset:
+                    fold_X_train = np.concatenate((fold_X_train, fold_X_train_set[item]), axis=0)
+
+                for item in arry_trainset:
+                    fold_y_train = np.concatenate((fold_y_train, fold_y_train_set[item]), axis=0)
+
+
+                model.fit(fold_X_train, fold_y_train)
+                train_predictions = model.predict(fold_X_train)
+                test_predictions = model.predict(fold_X_test)
+
+                train_error = train_error + (1 - metrics.accuracy_score(fold_y_train, train_predictions))
+                test_error = test_error + (1-metrics.accuracy_score(fold_y_testset,test_predictions))
+
+            train_error = train_error / k
+            test_error = test_error /k
+            if(test_error < min_test_error and train_error < min_train_error):
+                min_test_error = test_error
+                min_train_error = train_error
+                best_reg_c = ite
+        print("The best c is: ", best_reg_c)
+
+        model = svm.SVC(kernel='rbf', gamma=gamma, C=best_reg_c, max_iter=-1)
+        model.fit(X_train, y_train)
+
+        train_predictions = model.predict(X_train)
+        test_predictions = model.predict(X_test)
+
+        train_error = (1 - metrics.accuracy_score(y_train, train_predictions))
+        test_error = (1 - metrics.accuracy_score(y_test, test_predictions))
+
+        test_errors.append(test_error)
+        train_errors.append(train_error)
+
+    plt.xscale('log')
+    plt.plot(gamma_set, train_errors, 'r-', label="training error")
+    plt.plot(gamma_set, test_errors, 'b-', label="test error")
+    plt.legend(loc='upper right')
+    plt.title("k-fold errors Gaussian Kernel SVM")
+    plt.xlabel("Scale parameter gamma")
+    plt.ylabel("Errors")
+    plt.show()
+
+
+def main():
+    #read data
+    X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
+    X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
+
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    train_set = np.where((y_train == 5) | (y_train == 7))
+    test_set = np.where((y_test == 5) | (y_test == 7))
+
+    X_train = X_train[train_set[0][1:1001]]
+    X_test = X_test[test_set[0][1:1001]]
+    y_train = y_train[train_set[0][1:1001]]
+    y_test = y_test[test_set[0][1:1001]]
+
+    y_train = np.where(y_train == 5, 0, y_train)
+    y_train = np.where(y_train == 7, 1, y_train)
+    y_test = np.where(y_test == 5, 0, y_test)
+    y_test = np.where(y_test == 7, 1, y_test)
+
+    scaler = StandardScaler().fit(X_test)
+    X_train, X_test = scaler.transform(X_train), scaler.transform(X_test)
+
+    kfold(X_train, y_train, X_test, y_test, 10. ** np.arange(-5, 3), 10. ** np.arange(-5, 3), k=5)
+
+if __name__ == "__main__":
+        main()
