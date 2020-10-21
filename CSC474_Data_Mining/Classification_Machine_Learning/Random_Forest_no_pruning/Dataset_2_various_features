@@ -1,0 +1,55 @@
+import sklearn as sk
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn import linear_model
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import metrics
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+import graphviz
+import numpy
+import network as nw
+
+def main():
+    dataset = pd.read_csv("diabetes_dataset.csv")
+
+    X = dataset.drop('Outcome', axis=1)
+    y = dataset['Outcome']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    #diabetes dataset has 8 features
+    num_features = range(1, 9)
+    num_estimators = 25
+
+    training_errors = []
+    test_errors = []
+
+    for item in num_features:
+        classifier = RandomForestClassifier(n_estimators=num_estimators, random_state=0, max_features= item)
+        classifier.fit(X_train, y_train)
+
+        y_pred = classifier.predict(X_test)
+        train_pred = classifier.predict(X_train)
+
+        training_errors.append((1.0 - metrics.accuracy_score(y_train, train_pred)))
+        test_errors.append(1.0 - metrics.accuracy_score(y_test, y_pred))
+
+    plt.plot(num_features, training_errors, 'r-', label="training error")
+    plt.plot(num_features, test_errors, 'b-', label="test error")
+    plt.legend(loc='upper right')
+    plt.title("Random Forest Problem 2 Features".format(num_estimators))
+    plt.xlabel("Features")
+    plt.ylabel("Errors")
+    plt.show()
+
+if __name__ == "__main__":
+    main()
