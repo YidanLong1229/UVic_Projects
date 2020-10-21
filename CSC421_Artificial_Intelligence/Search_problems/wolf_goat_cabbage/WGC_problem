@@ -1,0 +1,136 @@
+import java.util.HashSet;
+import java.util.Set;
+
+public class ProblemWGC extends Problem {
+
+	boolean goal_test(Object state) {
+        StateWGC State_WGC = (StateWGC) state;
+
+        for(int i=1; i<4; i++){
+        	if(State_WGC.riverBank[i] == -1)
+        		return false;
+        }
+
+        return true;
+	}
+
+    Set<Object> getSuccessors(Object state) {
+
+        Set<Object> set = new HashSet<Object>();
+        StateWGC s = (StateWGC) state;
+
+				int boat = s.riverBank[0];
+				int wolf = s.riverBank[1];
+				int goat = s.riverBank[2];
+				int cabbage = s.riverBank[3];
+
+        StateWGC ss; //successor state
+
+				// passenger is wolf
+				ss = new StateWGC(s);
+				if (boat == wolf){
+					boat *= -1;
+					wolf *= -1;
+					if(wolf == goat && goat != boat && goat != cabbage){}
+					else if(cabbage == goat && goat != boat && goat != wolf){}
+					else{
+						ss.riverBank[0] *= -1;
+						ss.riverBank[1] *= -1;
+						set.add(ss);
+					}
+					boat *= -1;
+					wolf *= -1;
+				}
+
+				// passenger is goat
+				ss = new StateWGC(s);
+				if (boat == goat){
+					boat *= -1;
+					goat *= -1;
+					if(wolf == goat && goat != boat && goat != cabbage){}
+					else if(cabbage == goat && goat != boat && goat != wolf){}
+					else{
+						ss.riverBank[0] *= -1;
+						ss.riverBank[2] *= -1;
+						set.add(ss);
+					}
+					boat *= -1;
+					goat *= -1;
+				}
+
+				// passenger is cabbage
+				ss = new StateWGC(s);
+				if (boat == cabbage){
+					boat *= -1;
+					cabbage *= -1;
+					if(wolf == goat && goat != boat && goat != cabbage){}
+					else if(cabbage == goat && goat != boat && goat != wolf){}
+					else{
+						ss.riverBank[0] *= -1;
+						ss.riverBank[3] *= -1;
+						set.add(ss);
+					}
+					boat *= -1;
+					cabbage *= -1;
+				}
+
+				// no passenger
+				ss = new StateWGC(s);
+				boat *= -1;
+				if(wolf == goat && goat != boat && goat != cabbage){}
+				else if(cabbage == goat && goat != boat && goat != wolf){}
+				else{
+					ss.riverBank[0] *= -1;
+					set.add(ss);
+				}
+				boat *= -1;
+
+        return set;
+    }
+
+	double step_cost(Object fromState, Object toState) {
+
+		return 1;
+
+	}
+
+	public double h(Object state) {
+
+		StateWGC s = (StateWGC) state;
+		int d=0;
+		for(int i=1;i<4;i++){
+			if(s.riverBank[i]<0){
+				d++;
+			}
+		}
+		return d;
+	}
+
+
+	public static void main(String[] args) throws Exception {
+		ProblemWGC problem = new ProblemWGC();
+		Integer[] riverBank = {-1,-1,-1,-1};
+		problem.initialState = new StateWGC(riverBank);
+
+		Search search  = new Search(problem);
+
+		System.out.println("TreeSearch------------------------");
+		System.out.println("BreadthFirstTreeSearch:\t\t" + search.BreadthFirstTreeSearch());
+		System.out.println("UniformCostTreeSearch:\t\t" + search.UniformCostTreeSearch());
+		System.out.println("DepthFirstTreeSearch:\t\t" + search.DepthFirstTreeSearch());
+		System.out.println("GreedyBestFirstTreeSearch:\t" + search.GreedyBestFirstTreeSearch());
+		System.out.println("AstarTreeSearch:\t\t" + search.AstarTreeSearch());
+
+		System.out.println("\n\nGraphSearch----------------------");
+		System.out.println("BreadthFirstGraphSearch:\t" + search.BreadthFirstGraphSearch());
+		System.out.println("UniformCostGraphSearch:\t\t" + search.UniformCostGraphSearch());
+		System.out.println("DepthFirstGraphSearch:\t\t" + search.DepthFirstGraphSearch());
+		System.out.println("GreedyBestGraphSearch:\t\t" + search.GreedyBestFirstGraphSearch());
+		System.out.println("AstarGraphSearch:\t\t" + search.AstarGraphSearch());
+
+		System.out.println("\n\nIterativeDeepening----------------------");
+		System.out.println("IterativeDeepeningTreeSearch:\t" + search.IterativeDeepeningTreeSearch());
+		System.out.println("IterativeDeepeningGraphSearch:\t" + search.IterativeDeepeningGraphSearch());
+	}
+
+}
