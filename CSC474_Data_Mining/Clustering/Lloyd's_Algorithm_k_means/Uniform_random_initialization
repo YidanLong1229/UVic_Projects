@@ -1,0 +1,128 @@
+import numpy as np
+import pandas as pd
+import scipy
+import math
+import matplotlib.pyplot as plt
+import random
+from collections import defaultdict
+from math import sqrt
+from sklearn import metrics
+
+
+def cluster(dataset, k):
+    center = uniform_random_init(dataset, k)
+    dataset_assignment = assign(dataset, center)
+
+    i = 1
+    while i > 0:
+        center = get_center(dataset, dataset_assignment)
+
+        original_assignments = dataset_assignment
+        dataset_assignment = assign(dataset, center)
+
+        num = 0
+        l = zip(original_assignments, dataset_assignment)
+
+        for a, b in l:
+            if a != b:
+                num = num + 1
+        if num == 0:
+            break
+    clustering_cost = 0
+    for item, items in enumerate(dataset):
+        clustering_cost += get_e_distance(items, center[dataset_assignment[item]])
+    return clustering_cost
+
+
+def get_center(dataset, assignments): #m_step
+    center = []
+    m = defaultdict(list)
+    l = zip(assignments, dataset)
+
+    for i, j in l:
+        m[i].append(j)
+    for item in m.values():
+        avrg = np.mean(item, axis=0)
+        center.append(avrg)
+    return center
+
+
+def uniform_random_init(dataset, k):
+    center = []
+    le = len(dataset)
+    ra = range(le)
+    num = list(ra)
+    random.shuffle(num)
+    l = num[:k]
+    for item in l:
+        center.append(dataset[item])
+    return center
+
+
+def get_e_distance(point1, point2):#get Euclidean distance
+    dist = 0
+    lp1 = len(point1)
+    for item in range(lp1):
+        dist += (point1[item] - point2[item]) ** 2
+    sr = np.sqrt(dist)
+    return sr
+
+
+def assign(dataset, center): #e_step
+    assignm = []
+    l = len(center)
+    for i in dataset:
+        c = 0
+        min_distance = float("inf")
+        r = range(l)
+        for j in r:
+            tmp = get_e_distance(i, center[j])
+            if tmp < min_distance:
+                min_distance = tmp
+                c = j
+        assignm.append(c)
+    return assignm
+
+def main():
+
+    #read file
+
+    #dataset = pd.read_csv("dataset1.csv", header=None)
+    dataset = pd.read_csv("dataset2.csv", header=None)
+    dataset = np.array(dataset)
+
+    #k range
+    ran = range(2,8)
+
+    rcost_results = []
+    results = []
+
+    for item in ran:
+        print(item)
+        r_min = math.inf
+        r_costs = []
+        for items in range(3):
+            rcost = cluster(dataset, item)
+            if rcost < r_min:
+                r_min = rcost
+            else:
+                break
+
+        r_costs.append(r_min)
+        minim = min(r_costs)
+        rcost_results.append(minim)
+        results.append(item)
+
+
+    #plot
+    plt.plot(results, rcost_results, color='r', label="Uniform random init")
+    plt.legend(loc='upper right')
+    #plt.title('Lloyd’s algorithm Uniform Random Dataset1')
+    plt.title('Lloyd’s algorithm Uniform Random Dataset2')
+    plt.xlabel('k values')
+    plt.ylabel('Costs')
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
