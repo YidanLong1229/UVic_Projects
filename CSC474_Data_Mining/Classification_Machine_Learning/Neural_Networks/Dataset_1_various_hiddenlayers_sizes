@@ -1,0 +1,57 @@
+import sklearn as sk
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn import linear_model
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import metrics
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+import graphviz
+import numpy
+import network as nw
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
+
+def main():
+
+    dataset = np.loadtxt("cleaned_processed.cleveland.data", delimiter=",")
+
+    X = dataset[:, :-1]
+    y = dataset[:, -1]
+
+    train_error = []
+    test_error = []
+
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+
+    trainData, testData, trainLabel, testLabel = train_test_split(X, y, test_size=0.2)
+
+    hiddenlayer_sizes = []
+
+    for item in np.arange(100,1000,10):
+        hiddenlayer_sizes.append(item)
+    for item in hiddenlayer_sizes:
+        clf = MLPClassifier(hidden_layer_sizes=item, max_iter=1700, alpha=1e-2, solver='adam', learning_rate_init=0.05, learning_rate='adaptive')
+        clf.fit(trainData, trainLabel)
+        train_error.append( 1 - clf.score(trainData, trainLabel))
+        test_error.append( 1 - clf.score(testData, testLabel))
+
+    plt.plot(hiddenlayer_sizes, train_error, 'r-', label="training error")
+    plt.plot(hiddenlayer_sizes, test_error, 'b-', label="test error")
+    plt.legend(loc='upper right')
+    plt.title("Neural Networks Problem 1 Hidden layer sizes")
+    plt.xlabel("Hidden layer sizes")
+    plt.ylabel("Errors")
+    plt.show()
+
+if __name__ == "__main__":
+    main()
