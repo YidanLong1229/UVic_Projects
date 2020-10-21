@@ -1,0 +1,47 @@
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from scipy.cluster.hierarchy import dendrogram
+from sklearn.datasets import load_iris, load_wine
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.preprocessing import StandardScaler
+
+def plot_dendrogram(model, **kwargs):
+
+    counts = np.zeros(model.children_.shape[0])
+    n_samples = len(model.labels_)
+
+    for i, merge in enumerate(model.children_):
+        print(i)
+        current_count = 0
+        for item in merge:
+            if item < n_samples:
+                current_count += 1
+            else:
+                current_count += counts[item - n_samples]
+        counts[i] = current_count
+
+    linkage_matrix = np.column_stack([model.children_, model.distances_, counts]).astype(float)
+
+    dendrogram(linkage_matrix, **kwargs)
+
+def main():
+    dataset = pd.read_csv("dataset1.csv",header=None)
+    #dataset = pd.read_csv("dataset2.csv", header=None)
+
+    scaler = StandardScaler()
+    dataset = scaler.fit_transform(dataset)
+
+    data = np.array(dataset)
+
+    model = AgglomerativeClustering(distance_threshold=0, n_clusters=None, affinity="euclidean",linkage="average")
+
+    model = model.fit(data)
+
+    plt.title('Hierarchical Clustering Dendrogram')
+    plot_dendrogram(model, truncate_mode ="lastp", p=150)
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
