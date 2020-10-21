@@ -1,3 +1,9 @@
+//Search problems: Wolf-goat-cabbage problem, Missionaries and cannibals problem, Pancake Sorting Problem.
+//Return solution cost & the number of expansion.
+//Find heuristic function to improve A* compared to UCS.
+
+
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
