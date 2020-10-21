@@ -1,0 +1,79 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+from sklearn import svm
+import numpy as np, matplotlib.pyplot
+from sklearn.neighbors.classification import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import make_scorer
+from utils import mnist_reader
+import sklearn as sk
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn import metrics
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.model_selection import train_test_split
+import graphviz
+
+def main():
+    #read data
+    X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
+    X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
+
+    #extract classes of 5 and 7
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    train_set = np.where((y_train == 5) | (y_train == 7))
+    test_set = np.where((y_test == 5) | (y_test == 7))
+
+    X_train = X_train[train_set[0]]
+    X_test = X_test[test_set[0]]
+    y_train = y_train[train_set[0]]
+    y_test = y_test[test_set[0]]
+
+    y_train = np.where(y_train == 5, 0, y_train)
+    y_train = np.where(y_train == 7, 1, y_train)
+    y_test = np.where(y_test == 5, 0, y_test)
+    y_test = np.where(y_test == 7, 1, y_test)
+
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    train_error = []
+    test_error = []
+
+    #set parameter C ranged from 10e-5 to 10e5
+    reg_c = 10. ** np.arange(-5, 5)
+
+    for item in reg_c:
+        model = LogisticRegression(C=item, multi_class="multinomial", solver="lbfgs", max_iter=10000,penalty="l2")
+        model.fit(X_train, y_train)
+
+        test_predictions = model.predict(X_test)
+        train_predictions = model.predict(X_train)
+
+        train_error.append(1-metrics.accuracy_score(y_train,train_predictions))
+        test_error.append(1-metrics.accuracy_score(y_test,test_predictions))
+
+    #plot line graph
+    plt.xscale('log')
+    plt.plot(reg_c, train_error, 'r-', label="training error")
+    plt.plot(reg_c, test_error, 'b-', label="test error")
+    plt.legend(loc='upper right')
+    plt.title("Logical Regression")
+    plt.xlabel("Regularization parameter C")
+    plt.ylabel("Errors")
+    plt.show()
+
+if __name__ == "__main__":
+    main()
