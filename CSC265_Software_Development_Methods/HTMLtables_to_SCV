@@ -1,0 +1,100 @@
+import re
+import sys
+
+result = []
+
+#read the file content
+def readfile(filename):
+	try:
+		f = open(filename, "r")
+		content = f.readlines()
+		f.close()
+		return "".join(content)
+	except:
+		print("file can't be opened!")
+		return None
+
+def extract_table(table, number):
+	table_dict = {'header':[], "rows":[]}#empty dictionary store header and each row
+	rows = re.findall("<tr.*?</tr", table)#find each row
+	for r in rows:
+		header_flag = False
+		data_flag = False
+		header = re.findall("<th>", r)
+		data = re.findall("<td>",r)
+		if(len(header)>0):
+			header_flag = True
+		if(len(data)>0):
+			data_flag = True
+
+		if(header_flag):
+			temp = re.findall("<th(.*?)>(.*?)</th\s*>", r)
+			table_dict['header'] = [item[1] for item in temp]
+		else:
+			temp = re.findall("<td(.*?)>(.*?)</td\s*>", r)
+			table_dict['rows'].append([item[1] for item in temp])
+
+	result.append(table_dict)
+	out_string = "TABLE "+str(number)+":\n"
+	length =0
+	if(len(table_dict['header'])>0):
+		length = len(table_dict['header'])
+		out_string+= ','.join(table_dict['header'])+"\n"
+
+	for i in range(len(table_dict['rows'])):
+		for j in range(len(table_dict['rows'][i])):
+			if(table_dict['rows'][i][j].isspace()):
+				table_dict['rows'][i][j] =""
+			table_dict['rows'][i][j] = table_dict['rows'][i][j].lstrip()
+
+	#if no header, using the maximum lenght of row
+	if(length==0):
+		length = max([len(row) for row in table_dict['rows']])
+	for row in table_dict['rows']:
+		if(length>0 and len(row)<length):
+			while(len(row)<length):
+				row.append('')
+		out_string+= ','.join(row)+"\n"
+
+	return out_string
+
+
+def main():
+	arguments = sys.argv
+	if(len(arguments)!=3):
+		print("Invalid command line, you should follow: python3 table_to_csv.py < input.html > your_output.txt")
+		exit(1)
+	filename = arguments[1]
+	outputfile = arguments[2]
+	if(not filename.endswith(".html")):
+		print("wrong format of input file, must with .html extension.")
+		exit(1)
+
+	content = readfile(filename)
+	content = content.replace("\n","")
+	content = " ".join(content.split())
+	
+
+	tables = re.findall(r"<table>.*?</table>", content, re.IGNORECASE)
+	
+	fileout = open(outputfile,"w")
+	for c in range(len(tables)):
+		#this part is for print the result to the terminal
+		print(extract_table(tables[c], c+1))
+
+		#if you want to output the result to a file named output.txt,
+		#just uncomment the following code and comment the above print() statement
+		'''
+		fileout.write(extract_table(tables[c], c+1))
+		if(len(tables)-1!=c):
+			fileout.write("\n")
+		'''
+
+	fileout.close()
+	
+	
+
+
+if __name__ == '__main__':
+
+	main()
