@@ -1,0 +1,58 @@
+/*Question 1: Find the number of BBA members who is a guest.*/
+CREATE VIEW q1 AS SELECT mem_status, COUNT(*) FROM bba_members WHERE mem_status = 'Guest' GROUP BY mem_status;
+
+/*Question 2: Display sorted BBA members by member ID in descending order.*/
+CREATE VIEW q2 AS SELECT * FROM bba_members ORDER BY mem_id DESC;
+
+/*Question 3: Find all types of membership. (using distinct)*/
+CREATE VIEW q3 AS SELECT DISTINCT mem_type FROM bba_members;
+
+/*Question 4: Display five newest members*/
+CREATE VIEW q4 AS SELECT * FROM bba_members ORDER BY reg_date DESC  LIMIT 5;
+
+/*Question 5: Display members who is participating in camps.*/
+CREATE VIEW q5 AS SELECT * FROM bba_members WHERE mem_type IN ('Instructor','Camps');
+
+/*Question 6: Display details of members who registered in May 2019*/
+CREATE VIEW q6 AS SELECT * FROM bba_members WHERE reg_date BETWEEN DATE'2019-05-01' AND '2019-05-31';
+
+/*Question 7: What is the average price of all merchandises after rounding?*/
+CREATE VIEW q7 AS SELECT ROUND(AVG(price)) FROM merchandises;
+
+/*Question 8: Display the maximum capacity of different passes purchased by each member.(using join)*/
+CREATE VIEW q8 AS 
+SELECT * FROM bba_members 
+JOIN membership_type ON (bba_members.mem_type = membership_type.mem_type_name);
+
+/*Question 9: Check whether camps with camps ID exists in services.(using exists)*/
+CREATE VIEW q9 AS 
+SELECT camp_id
+FROM services                                                            
+WHERE EXISTS(
+        SELECT 1
+        FROM camps
+        WHERE camp_id = services.camp_id);
+
+/*Question 10: Display details of member either purchases passes or is an instructor.*/
+CREATE VIEW q10 AS 
+SELECT * FROM bba_members WHERE mem_type = 'Passes'
+UNION
+SELECT * FROM bba_members WHERE mem_type = 'Instructor';
+
+/*Question 11: Find the phone number of women who is a member and an instructor.(using subquery)*/
+CREATE VIEW q11 AS 
+SELECT bba_members.phone_number 
+FROM bba_members,  (SELECT *
+                    FROM camp_instructor
+                    WHERE Gender = 'Female') IG
+WHERE bba_members.email = IG.email;
+
+/*Question 12: Find the last name of the male instructor who registered on October 20 2019.(using subquery)*/
+CREATE VIEW q12 AS 
+SELECT last_name
+FROM bba_members
+WHERE mem_type  = 'Instructor' AND
+      mem_id = (SELECT mem_id
+                FROM bba_members
+                WHERE Gender = 'Male' AND
+                    reg_date = '2019-10-20');
