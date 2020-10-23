@@ -1,0 +1,470 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import csv
+
+
+def main():
+    # deliberately left blank for your implementation - remove this comment and begin
+    arguments = sys.argv
+    
+    groupby_flag = False
+    groupby_field = []
+
+    calculation_flag = False
+    calculation_label_field = []
+    labels = ['--min', '--max', '--mean', '--sum']
+
+    top_flag = False
+    top_args = []
+
+    count_flag = True
+
+    if("--group-by" in arguments):
+        groupby_flag = True
+        count_flag = False
+        for i in range(len(arguments)):
+            if arguments[i] == '--group-by':
+                groupby_field.append(arguments[i+1].lower())
+                break
+
+ 
+    for i in range(len(arguments)):
+        if(arguments[i] in labels):
+            calculation_label_field.append((arguments[i], arguments[i+1].lower()))
+    if(len(calculation_label_field) !=0):
+        calculation_flag = True
+        count_flag=False
+
+
+    if('--top' in arguments):
+        top_flag = True
+        count_flag = False
+        for i in range(len(arguments)):
+            if(arguments[i] == '--top'):
+                top_args.append(arguments[i+1])
+                top_args.append(arguments[i+2])
+                break
+
+    if("--count" in arguments):
+        count_flag = True
+
+
+
+
+    # print(groupby_flag, groupby_field)
+    # print(calculation_flag, calculation_label_field)
+    # print(count_flag)
+    # print(top_flag, top_args)
+
+
+    if(len(arguments)<=2):
+        print("invalid command line")
+        exit(0)
+    #filename
+    filename = arguments[2]
+    
+    #Check that the CSV file provided in the first command-line argument exists 
+    csv_reader =None
+    if(filename.endswith('.csv')):
+    	try:
+    		# check the file is readable
+    		csv_file = open(filename, encoding='utf-8-sig')
+    		csv_reader = csv.reader(csv_file, delimiter=',')
+    	except:
+    		print(filename+" is not readable!")
+    else:
+    	print("no input file specified")
+    	exit(0)
+    line_number = 0
+
+    lines = []
+    if csv_reader is not None:
+    	for row in csv_reader:
+    		lines.append(row.copy())
+    		
+        # lines = list(csv_reader)
+
+    # '''
+    #Validate the command line arguments
+    if(len(lines) !=0):
+    	columns = lines[0]
+    	count = len(lines)-1
+    	# columns_set = set(columns) #headers 
+    	columns_set = {item.lower() for item in columns}
+    	# print("header:  ", columns_set)
+
+    	#check the compuation field are all valid
+    	calculation_field_set = {item[1] for item in calculation_label_field}
+    	if(calculation_field_set.issubset(columns_set)):
+    		pass
+    	else:
+    		notfound = calculation_field_set - (calculation_field_set&columns_set)
+    		str_notfound = [str(item) for item in notfound]
+
+    		error_msg = 'Error: '+filename+':no field with name ' +', '.join(str_notfound) +' found'
+    		print(error_msg)
+    		errorfile(8, error_msg)
+    		writeoutput("")
+    		exit(8)
+
+
+    	#check the group by field are all valid
+    	groupby_field_set = set(groupby_field)
+    	if(groupby_field_set.issubset(columns_set)):
+    		pass
+    	else:
+    		groupby_notfound = groupby_field_set - (groupby_field_set&columns_set)
+    		str_notfound = [str(item) for item in groupby_notfound]
+    		error_msg = 'Error: '+filename+':no group-by argument with name ' +', '.join(str_notfound) +' found'
+    		# print(error_msg)
+    		errorfile(9, error_msg)
+    		writeoutput("")
+    		exit(9)
+    else:
+    	print("no content read")
+
+    #now start processing
+    #first only compute
+    # print(groupby_flag,calculation_flag, count_flag)
+    if(len(lines) !=0):
+    	header = [item.lower() for item in columns]
+
+    	if(groupby_flag==False and calculation_flag==False and count_flag==True):
+    		msg = 'count\n'+str(len(lines)-1)
+    		writeoutput(msg)
+    		exit(0)
+
+    	if(groupby_flag==False and calculation_flag==True):
+    		result ={}
+    		data = []
+    		
+    		for i in range(1, len(lines)):
+    			data.append((i, lines[i].copy()))
+    		for item in calculation_label_field:
+    			fun = item[0].replace('--','')
+    			label = item[1]
+    			key = fun+'_'+label
+    			index = header.index(label)
+    			if(fun=='max'):
+    				r = max_fun(data, index, label, filename)
+    				if(r !=None):
+    					result[key] = '"'+str(r)+'"'
+    				else:
+    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column"
+    					errorfile(7, errmsg)
+    					exit(7)
+
+    				
+    			elif(fun=='mean'):
+    				r = mean_fun(data, index, label, filename)
+    				if(r !=None):
+    					result[key] = '"'+str(r)+'"'
+    				else:
+    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+    					errorfile(7, errmsg)
+    					exit(7)
+    			elif(fun=='min'):
+    				r = min_fun(data, index, label, filename)
+    				if(r !=None):
+    					result[key] = '"'+str(r)+'"'
+    				else:
+    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+    					errorfile(7, errmsg)
+    					exit(7)
+    			elif(fun=='sum'):
+    				r = sum_fun(data, index, label, filename)
+    				if(r !=None):
+    					result[key] = '"'+str(r)+'"'
+    				else:
+    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+    					errorfile(7, errmsg)
+    					exit(7)
+    		# print(result)
+    		message = ",".join(result.keys())+"\n"+",".join(result.values())
+    		writeoutput(message)
+    	# second, first group then count and compute
+    	if(groupby_flag==True):
+    		keys = []
+    		data ={}
+    		grouplabel = groupby_field[0]
+    		index = header.index(grouplabel)
+    		result = {}
+
+    		if(count_flag ==True):
+    			outputheader = [grouplabel, 'count']
+    		else:
+    			outputheader = [grouplabel]
+
+    		for i in range(1, len(lines)):
+    			curr = lines[i][index]
+    			if(curr in keys):
+    				data[curr].append( (i, lines[i].copy()) )
+    			else:
+    				keys.append(curr)
+    				data[curr] = [ (i, lines[i].copy())]
+    		keys = sorted(keys)
+
+    		#if more than 20 distinct values
+    		if(len(keys)>20):
+    			errmsg = 'Error:'+filename+":ticker has been capped at 20 distinct values"
+    			errorfile("n", errmsg)
+    			writeoutput("")
+    			print("more then 20")
+    			exit(0)
+
+    		for outkey in keys:
+    			if(count_flag ==True):
+    				result[outkey] = [outkey, str(len(data[outkey]))]
+    			else:
+    				result[outkey] = [outkey]
+
+    		# print(calculation_label_field)
+    		if(calculation_flag==True):
+	    		for outkey in keys:
+	    			# print(calculation_label_field)
+	    			for item in calculation_label_field:
+		    			fun = item[0].replace('--','')
+		    			label = item[1]
+		    			key = fun+'_'+label
+		    			if(key in outputheader):
+		    				pass
+		    			else:
+		    				outputheader.append(key)
+		    				# print("***:", key)
+
+		    			index = header.index(label)
+		    			if(fun=='max'):
+		    				r = max_fun(data[outkey], index, label, filename)
+		    				if(r !=None):
+		    					result[outkey].append('"'+str(r)+'"')
+		    				else:
+		    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+		    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column"
+		    					errorfile(7, errmsg)
+		    					exit(7)
+
+		    				
+		    			elif(fun=='mean'):
+		    				r = mean_fun(data[outkey], index, label, filename)
+		    				if(r !=None):
+		    					result[outkey].append('"'+str(r)+'"')
+		    				else:
+		    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+		    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+		    					errorfile(7, errmsg)
+		    					exit(7)
+		    			elif(fun=='min'):
+		    				r = min_fun(data[outkey], index, label, filename)
+		    				if(r !=None):
+		    					result[outkey].append('"'+str(r)+'"')
+		    				else:
+		    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+		    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+		    					errorfile(7, errmsg)
+		    					exit(7)
+		    			elif(fun=='sum'):
+		    				r = sum_fun(data[outkey], index, label, filename)
+		    				if(r !=None):
+		    					result[outkey].append('"'+str(r)+'"')
+		    				else:
+		    					errmsg = "Error: "+filename+":more than 100 non-numeric values found in aggregate column" + label
+		    					# errmsg = ​"Error: "+filename+":more than 100 non-numeric values found in aggregate column "+label
+		    					errorfile(7, errmsg)
+		    					exit(7)
+	    	# print(result)
+    		message = ",".join(outputheader)+"\n"
+    		for k,v in result.items():
+    			message+=  ",".join(v)+"\n"
+    		message = message[:-1]
+    		writeoutput(message)
+
+    	if(top_flag==True):
+    		data =[]
+    		# result = []
+    		k = int(top_args[0])
+    		top_label = top_args[1]
+    		# print(top_label)
+    		top_index = header.index(top_label)
+
+    		for i in range(1, len(lines)):
+    			data.append((i, lines[i].copy()))
+
+    		if(groupby_flag==False):
+    			r = top_fun(data, top_index, label, filename)
+    			if(r!=None):
+    				message = "top_"+top_label+"\n"+'"'+",".join(r[:k])+'"'
+    				writeoutput(message)
+    				exit(0)
+    			else:
+    				message = "Error: "+filename+" "+label+" has been capped at 20 distinct values"
+    				# message = ​"Error: "+filename+" "+label+" has been capped at 20 distinct values"
+    				errorfile("20_distint_err", message)
+    				exit(6)
+    		else:
+    			keys = []
+	    		data_dict ={}
+	    		grouplabel = groupby_field[0]
+	    		index = header.index(grouplabel)
+	    		result = {}
+	    		outputheader = [grouplabel, "top_"+top_label]
+
+	    		for i in range(1, len(lines)):
+	    			curr = lines[i][index]
+	    			if(curr in keys):
+	    				data_dict[curr].append( (i, lines[i].copy()) )
+	    			else:
+	    				keys.append(curr)
+	    				data_dict[curr] = [ (i, lines[i].copy())]
+	    		keys = sorted(keys)
+	    		message = ",".join(outputheader)+"\n"
+	    		for key in keys:
+	    			r = top_fun(data_dict[key], top_index, label, filename)
+	    			if(r!=None):
+	    				message+= key+',"'+",".join(r[:k])+'"'+"\n"
+	    			# else:
+	    			# 	message = "Error: "+filename+" "+label+" has been capped at 20 distinct values"
+	    			# 	# message = ​"Error: "+filename+" "+label+" has been capped at 20 distinct values"
+	    			# 	errorfile("20_distint_err", message)
+	    			# 	exit(6)
+	    		message = message[:-1]
+	    		writeoutput(message)
+    			exit(0)
+
+
+
+
+
+
+def errorfile(errnum, errmsg):
+    errfilename = str(errnum)+".err"
+    f = open(errfilename,"w")
+    f.write(errmsg+"\n")
+    print(errmsg)
+    f.close()
+
+def writeoutput(msg):
+    # f = open('output.csv',"w")
+    # f.write(msg+"\n")
+    print(msg)
+    # f.close()
+	
+def non_numeric_err(errmsg):
+    f = open('non_numeric_error',"a+")
+    f.write(errmsg+"\n")
+    print(errmsg)
+    f.close()
+
+def max_fun(arr, index, label, filename):
+	maxvalue = -1000000
+	non_numeric_count = 0
+	for item in arr:
+		line = item[0]
+		val = item[1]
+		try:
+			current = float(val[index])
+			if(current>maxvalue):
+				maxvalue = current
+		except:
+			# print(label, str([val[index]]))
+			# print(val, index)
+			errmsg = 'Error: '+ filename+':'+str(line)+": can’t compute max on non-numeric value "+"'"+val[index]+"'\n"
+			non_numeric_err(errmsg)
+			non_numeric_count+=1
+
+		if(non_numeric_count>100):
+			return None
+	return maxvalue
+def mean_fun(arr, index, label, filename):
+	meanvalue = 0
+	count=0
+	non_numeric_count = 0
+	for item in arr:
+		line = item[0]
+		val = item[1]
+		try:
+			current = float(val[index])
+			meanvalue+=current
+			count+=1
+		except:
+			errmsg = 'Error: '+ filename+':'+str(line)+": can’t compute mean on non-numeric value "+"'"+val[index]+"'\n"
+			non_numeric_err(errmsg)
+			non_numeric_count+=1
+		if(non_numeric_count>100):
+			return None
+	return meanvalue/count
+def min_fun(arr,index, label, filename):
+	minvalue = 1000000
+	non_numeric_count = 0
+	for item in arr:
+		line = item[0]
+		val = item[1]
+		try:
+			current = float(val[index])
+			if(current<minvalue):
+				minvalue = current
+		except:
+			errmsg = 'Error: '+ filename+':'+str(line)+": can’t compute min on non-numeric value "+"'"+val[index]+"'\n"
+			non_numeric_err(errmsg)
+			non_numeric_count+=1
+		if(non_numeric_count>100):
+			return None
+	return minvalue
+
+
+
+def sum_fun(arr, index, label, filename):
+	sumvalue = 0
+	non_numeric_count = 0
+	for item in arr:
+		line = item[0]
+		val = item[1]
+		try:
+			current = float(val[index])
+			sumvalue+=current
+		except:
+			# print(label, str([val[index]]))
+			# print(val, index)
+			errmsg = 'Error: '+ filename+':'+str(line)+": can’t compute sum on non-numeric value "+"'"+val[index]+"'\n"
+			non_numeric_err(errmsg)
+			non_numeric_count+=1
+		if(non_numeric_count>100):
+			return None
+			# exit(0)
+	return sumvalue
+
+def top_fun(arr, index, label, filename):
+	tempresult = {}
+	keys = []
+	for item in arr:
+		line = item[0]
+		val = item[1]
+		key = val[index]
+		if(key in keys):
+			tempresult[key]+=1
+		else:
+			tempresult[key]=1
+			keys.append(key)
+		if(len(keys)>20):
+			return None
+
+	r = []
+	for k,v in tempresult.items():
+		r.append((k,v))
+	for i in range(len(r)-1):
+		for j in range(i+1,len(r)):
+			if(r[i][1]<r[j][1]):
+				t = r[j]
+				r[j] = r[i]
+				r[i] = t
+
+	return [ele[0]+": "+str(ele[1]) for ele in r]
+
+if __name__ == '__main__':
+    main()
