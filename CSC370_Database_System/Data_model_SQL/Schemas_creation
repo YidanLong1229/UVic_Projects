@@ -1,0 +1,286 @@
+create table BBA_MEMBERS (
+	Mem_ID INT unique,
+	First_Name VARCHAR(50),
+	Last_Name VARCHAR(50),
+	Gender VARCHAR(50),
+	Email VARCHAR(50),
+	Phone_Number VARCHAR(50),
+	Address VARCHAR(50),
+	Mem_Status VARCHAR(10),
+	Mem_Type VARCHAR(10),
+	Reg_Date DATE
+);	
+
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (1, 'Indira', 'Guerrieri', 'Female', 'iguerrieri0@npr.org', '994-160-3521', '10696 Burning Wood Drive', 'Full', 'Passes', '2019-05-16');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (2, 'Smith', 'Coughan', 'Male', 'scoughan1@webnode.com', '996-646-6780', '56664 Gateway Point', 'Full', 'Passes', '2019-05-25');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (3, 'Morley', 'Guerin', 'Male', 'mguerin2@ucoz.ru', '534-773-0615', '4 Lotheville Circle', 'Guest', 'Passes' , '2019-05-26');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (4, 'Hurlee', 'Elden', 'Male', 'helden3@so-net.ne.jp', '787-211-6885', '1964 Kinsman Trail', 'Guest', 'Camps', '2019-10-09');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (5, 'Sammy', 'Ong', 'Male', 'song4@kickstarter.com', '243-167-3769', '312 Scoville Street', 'Guest', 'Camps' , '2020-02-06');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (6, 'Isadore', 'Fosserd', 'Male', 'ifosserd0@nih.gov', '449-516-0705', '5334 Hanson Way', 'Guest', 'Camps', '2019-08-26');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (7, 'Marja', 'Dicty', 'Female', 'mdicty1@list-manage.com', '249-292-1279', '68 Judy Parkway', 'Drop-in', 'Both', '2019-12-30');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (8, 'Jamaal', 'Razzell', 'Male', 'jrazzell2@scientificamerican.com', '579-736-3578', '8 Derek Circle', 'Drop-in', 'Both', '2020-02-01');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (9, 'Fayina', 'Althorp', 'Female', 'falthorp3@themeforest.net', '891-370-9965', '6269 Redwing Plaza', 'Drop-in', 'Camps', '2019-09-23');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (10, 'Morten', 'Doerling', 'Male', 'mdoerling4@comcast.net', '479-607-0081', '67 Beilfuss Pass', 'Drop-in', 'Camps', '2019-04-21');
+insert into BBA_MEMBERS (Mem_ID, First_Name, Last_Name, Gender, Email, Phone_Number, Address, Mem_Status, Mem_Type, Reg_Date) values (13, 'Nannette', 'De Bruyne', 'Female', 'ndebruyne2@angelfire.com', '914-884-7940', '644 Lakewood Terrace', 'Others', 'Instructor', '2020-02-26');
+
+
+
+
+
+create table CAMP_INSTRUCTOR (
+	inst_ID INT UNIQUE,
+	mem_id INT UNIQUE,
+	First_name VARCHAR(50),
+	Last_name VARCHAR(50),
+	Gender VARCHAR(50),
+	Email VARCHAR(50),
+	Phone_number VARCHAR(50),
+	address VARCHAR(50),
+	ins_status VARCHAR(50),
+	reg_date DATE,
+	PRIMARY KEY(inst_ID,mem_id),
+);
+
+ALTER TABLE camp_instructor
+ADD CONSTRAINT constraint1
+FOREIGN KEY(mem_id)REFERENCES bba_members(mem_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+insert into CAMP_INSTRUCTOR (inst_ID, mem_id, First_name, Last_name, Gender, Email, Phone_number, address, ins_status, reg_date) values (01, 11, 'Bettine', 'McShirrie', 'Female', 'bmcshirrie0@ox.ac.uk', '230-923-0416', '978 Dunning Pass', 'Available', '1/12/2020');
+insert into CAMP_INSTRUCTOR (inst_ID, mem_id, First_name, Last_name, Gender, Email, Phone_number, address, ins_status, reg_date) values (02, 12, 'Claus', 'Kemitt', 'Male', 'ckemitt1@princeton.edu', '177-709-1969', '207 Surrey Center', 'Not Available', '10/20/2019');
+insert into CAMP_INSTRUCTOR (inst_ID, mem_id, First_name, Last_name, Gender, Email, Phone_number, address, ins_status, reg_date) values (03, 13, 'Nannette', 'De Bruyne', 'Female', 'ndebruyne2@angelfire.com', '914-884-7940', '644 Lakewood Terrace', 'Available', '2/26/2020');
+
+
+
+
+
+create table CAMPS (
+	Camp_ID INT UNIQUE,
+	Event_name VARCHAR(50),
+	Current_num_members INT,
+	Instructor VARCHAR(50)
+);
+
+ALTER TABLE camps
+ADD COLUMN service_id int;
+
+ALTER TABLE camps
+Add constraint constraint2
+Foreign key(service_id) references services(service_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+/*Trigger for update service_id in table camp.*/
+/*
+CREATE FUNCTION camp_trig_func() RETURNS trigger As $camps_trig$
+    BEGIN 
+        UPDATE camps
+            SET service_id = '5';
+        RETURN NULL;
+    END;
+$camps_trig$ language plpgsql;
+
+CREATE trigger UpdateCampsTrigger
+    AFTER UPDATE ON camps
+    for each STATEMENT
+    EXECUTE PROCEDURE camp_trig_func(); 
+*/
+
+update camps
+set service_id = '5';
+
+update camps
+set service_id = '6'
+where camp_id = '2';
+
+insert into CAMPS (Camp_ID,Event_name, Current_num_members,Instructor) values (01,'10K Competitions Training', 4, 'Nannette De Bruyne');
+insert into CAMPS (Camp_ID,Event_name, Current_num_members,Instructor) values (02,'5K Competitions Training', 3, 'Bettine McShirrie');
+
+
+
+
+
+create table MEMBERSHIP_TYPE (
+	mem_Type_Name VARCHAR(50),
+	Max_Capacity INT,
+	PRIMARY KEY (mem_type_name)
+);
+
+insert into MEMBERSHIP_TYPE (mem_Type_Name, Max_Capacity) values ('Passes', 20);
+insert into MEMBERSHIP_TYPE (mem_Type_Name, Max_Capacity) values ('Camps', 20);
+insert into MEMBERSHIP_TYPE (mem_Type_Name, Max_Capacity) values ('Both', 10);
+insert into MEMBERSHIP_TYPE (mem_Type_Name, Max_Capacity) values ('Instructor', 10);
+
+
+
+
+
+create table MERCHANDISES (
+	product_name VARCHAR(50),
+	Price float,
+	stock INT,
+	PRIMARY KEY (product_name)
+);
+
+insert into MERCHANDISES (product_name,price,stock) values ('Towels',9.99 , 228);
+insert into MERCHANDISES (product_name,price,stock) values ('T-shirts',39.99 , 150);
+insert into MERCHANDISES (product_name,price,stock) values ('Locks',12.99 , 250);
+insert into MERCHANDISES (product_name,price,stock) values ('Training Legging',69.99 , 100);
+insert into MERCHANDISES (product_name,price,stock) values ('Hair Ties',1.99 , 199);
+insert into MERCHANDISES (product_name,price,stock) values ('Shampoo&Conditioner Package',19.99 , 200);
+insert into MERCHANDISES (product_name,price,stock) values ('Weight-lifting Gloves',39.99 , 20);
+
+
+
+
+
+create table PASSES (
+	pass_id INT UNIQUE,
+	pass_name VARCHAR(50),
+	current_num_members INT
+);
+
+ALTER TABLE passes
+add column service_id int;
+
+ALTER TABLE passes
+add constraint constraint4
+foreign key(service_id) references services(service_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+update passes
+set service_id = '1'
+where pass_id = '1';
+
+update passes
+set service_id = '2'
+where pass_id = '2';
+
+update passes
+set service_id = '3'
+where pass_id = '3';
+
+update passes
+set service_id = '4'
+where pass_id = '4';
+
+insert into PASSES (pass_id, pass_name, current_num_members) values ('1', 'Single Drop-in Pass', 2);
+insert into PASSES (pass_id, pass_name, current_num_members) values ('2', '10 Drop-in Pass', 1);
+insert into PASSES (pass_id, pass_name, current_num_members) values ('3', 'Quarterly Drop-in', 1);
+insert into PASSES (pass_id, pass_name, current_num_members) values ('4', 'Annual Drop-in', 1);
+
+
+
+
+
+
+create table SERVICES (
+	Service_ID INT UNIQUE,
+	Service_Name VARCHAR(50),
+	Price VARCHAR(50),
+	Max_Capacity INT,
+	Camp_ID INT UNIQUE ,
+	Pass_ID INT UNIQUE
+);
+
+UPDATE services
+SET camp_id = NULL
+WHERE service_id = '1';
+
+UPDATE services
+SET camp_id = NULL
+WHERE service_id = '2';
+
+UPDATE services
+SET camp_id = NULL
+WHERE service_id = '3';
+
+UPDATE services
+SET camp_id = NULL
+WHERE service_id = '4';
+
+UPDATE services
+SET pass_id = NULL
+WHERE service_id = '5';
+
+UPDATE services
+SET pass_id = NULL
+WHERE service_id = '6';
+
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity, Camp_ID, Pass_ID) values (01, 'Single Drop-in Pass', '$5.98', 10, '00001', '00001');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity, Camp_ID, Pass_ID) values (02, '10 Drop-in Pass', '$49.98', 10, ' 00002', '00002');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity, Camp_ID, Pass_ID) values (03, 'Quarterly Drop-in Pass', '$119.98', 20, '00003', '00003');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity, Camp_ID, Pass_ID) values (04, 'Annual Drop-in Pass', '$399.98', 10, '00004', '00004');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity, Camp_ID, Pass_ID) values (05, '10K Competitions Training', '$199.98', 5, '0001', ' 101');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity,Camp_ID, Pass_ID) values (06, '5K Competitions Training', '$199.98', 5, '0002', '102');
+insert into SERVICES (Service_ID, Service_Name, Price, Max_Capacity,Camp_ID, Pass_ID) values (07, 'Selling merchandises', '', 1157 , NULL, NULL);
+
+
+
+
+
+create table Has (
+	mem_Type_Name VARCHAR(50),
+	Mem_ID INT,
+	FOREIGN KEY (mem_type_name) REFERENCES  membership_type(mem_type_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KeY(mem_id) REFERENCES bba_members(mem_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+insert into Has (mem_type_name,mem_id) values ('Passes',1);
+insert into Has (mem_type_name,mem_id) values ('Passes',2);
+insert into Has (mem_type_name,mem_id) values ('Passes',3);
+insert into Has (mem_type_name,mem_id) values ('Camps',4);
+insert into Has (mem_type_name,mem_id) values ('Camps',5);
+insert into Has (mem_type_name,mem_id) values ('Camps',6);
+insert into Has (mem_type_name,mem_id) values ('Both',7);
+insert into Has (mem_type_name,mem_id) values ('Both ',8);
+insert into Has (mem_type_name,mem_id) values ('Camps',9);
+insert into Has (mem_type_name,mem_id) values ('Camps',10);
+insert into Has (mem_type_name,mem_id) values ('Instructor',11);
+insert into Has (mem_type_name,mem_id) values ('Instructor',12);
+insert into Has (mem_type_name,mem_id) values ('Instructor',13);
+
+
+
+
+
+create table purchase (
+	Mem_ID INT,
+	product_name VARCHAR(50),
+	Service_ID INT,
+	FOREIGN KEY (Mem_ID) REFERENCES  bba_members(Mem_ID),
+	FOREIGN KeY(product_name) REFERENCES merchandises(product_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KeY(Service_ID) REFERENCES services(Service_ID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+insert into purchase (mem_id,product_name,service_id) values (1, 'Towels', 7);
+insert into purchase (mem_id,product_name,service_id) values (2, 'Towels', 7);
+insert into purchase (mem_id,product_name,service_id) values (3, 'Locks', 7);
+insert into purchase (mem_id,product_name,service_id) values (4, 'Hair Ties', 7);
+insert into purchase (mem_id,product_name,service_id) values (5, 'Towels', 7);
+insert into purchase (mem_id,product_name,service_id) values (6, 'Weight-lifting Gloves', 7);
+insert into purchase (mem_id,product_name,service_id) values (7, NULL, 7);
+insert into purchase (mem_id,product_name,service_id) values (8, ' Locks ', 7);
+insert into purchase (mem_id,product_name,service_id) values (9, ' Locks ', 7);
+insert into purchase (mem_id,product_name,service_id) values (10, 'T-shirts', 7);
+insert into purchase (mem_id,product_name,service_id) values (11, 'Training Legging', 7);
+insert into purchase (mem_id,product_name,service_id) values (12, 'Shampoo&Conditioner Package', 7);
+insert into purchase (mem_id,product_name,service_id) values (13, NULL, 7);
+
+
+
+
+
+
+
+create table teaches (
+	inst_ID INT,
+	Camp_ID INT,
+	Service_ID INT,
+	FOREIGN KEY (inst_ID) REFERENCES  camp_instructor(inst_ID) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KeY(Camp_ID) REFERENCES camps(Camp_ID) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KeY(Service_ID) REFERENCES services(Service_ID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+insert into teaches (inst_ID,Camp_ID,Service_ID) values (1,1 , 5);
+insert into teaches (inst_ID,Camp_ID,Service_ID) values (2,1 , 5);
+insert into teaches (inst_ID,Camp_ID,Service_ID) values (3,2 , 6);
+
+
